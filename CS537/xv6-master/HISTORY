@@ -1,0 +1,3 @@
+user/makefile.mk
+----------------
+    --section-start=.text=0x0

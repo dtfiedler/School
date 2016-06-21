@@ -1,0 +1,30 @@
+mysh.v4.c - 
+
+*--**--**--**--**--**--**--**--**--**--**--**--**--**--**--**--**--*
+Visible Tests:
+	Passed 19 of 19 tests with a score of 19 on 19.
+--------------------------------------------------------------------
+Hidden Tests:
+	Passed 4 of 5 tests with a score of 4 on 5.
+--------------------------------------------------------------------
+Extra Credit Tests:
+	Passed 1 of 3 tests with a score of 1 on 5.
+--------------------------------------------------------------------
+Total:
+	Passed 23 of 24 tests with a score of 23 on 24.
+	Extra Credit : Passed 1 of 3 tests with a score of 1 on 5.
+*--**--**--**--**--**--**--**--**--**--**--**--**--**--**--**--**--*
+
+
+
+mysh.v5.c - err but fixed following 
+1. add ERR for pip goto.
+	_ERR: 
+		close(fd[0]);
+		close(fd[1]);
+		return -1
+
+2. move variable out the while loop
+3. fix child process will not return for unreconginziable command. 
+	exit(1);
+4. assert(fd != -1) for redirect.

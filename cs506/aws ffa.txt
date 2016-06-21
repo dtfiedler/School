@@ -1,0 +1,4 @@
+********SSH TO AWS************
+
+ssh -i ericsux.pem ec2-user@ec2-52-36-51-196.us-west-2.compute.amazonaws.com
+

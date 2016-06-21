@@ -1,0 +1,18 @@
+align - Check that the forst pointer returned is 8-byte aligned
+align2 - 8-byte alignment check for four allocations
+alloc - One 16 byte allocation test
+alloc2 - Four different sized allocations test
+badfree - Freeing a pointer not returned by Mem_Alloc
+badinit - Bad argument to Mem_Init
+coalesce - Allocate 4 80 byte chunks and rest to 16 byte chunks till full, free the 4 780 byte chunks consecutive chunks and allocate an 256 byte chunk
+coalesce2 - Allocate 6 80 byte followed by 4 16 byte chunks in particular. Then fill rest by 16 byte chunks. Free those 6 80 byte and 4 16 byte chunks to make space for 2 256 byte chunks
+doubleinit - Try to call Mem_Init twice
+free - A 256 byte allocation followed by it's free
+free2 - Two different sized allocations followed by two frees then followed by another two different sized allocations followed by their frees
+free3 - A lot of interspersed different sized allocations and frees
+init - Test Mem_Init by a size of 4096
+init2 - Mem_Init with 1, expecting rounding to page table size which is 4096, trying to fit 15 256 byte chunks and a 80 byte chunk
+nospace - Mem_Init with 4096, trying to allocate 15 256 byte chunks. The 16th 256 byte allocation should fail
+nullfree - Trying to free a NULL pointer
+writeable - Writes a single integer to the pointer returned after a 80 byte allocation
+writeable2 - Allocate 4 chunks of sizes 16, 80, 256 and 80 respectively, fill them with a, b, c and d respectively and compare if anything got overlapped

@@ -1,0 +1,424 @@
+*****************************Intro***********************************
+Operating systems make it easy to run programs, allow them to share memory, interact with devices, etc.
+	-mainly through VIRTUALIZATION : taking a physical resource (memory) and transforming it to a more general, useful, and powerful virtual resource (OS can be called virtual machine)
+	-OS provides API’s that can be called to do so, known as STANDARD LIBRARIES
+
+OS is in charge of creating the illusion that their are many CPU’s, thus making it possible to run many programs at once, known as VIRTUALIZING THE CPU
+
+Virtualizing Memory:
+Code to show that each program creates its own Virtual Address Space
+
+#include <unistd.h>#include <stdio.h>#include <stdlib.h>#include "common.h"intmain(int argc, char *argv[]){ 	int *p = malloc(sizeof(int));	assert(p != NULL);	printf("(%d) memory address of p: %08x\n",	 getpid(), (unsigned) p); 			// a2 
+	
+	*p=0; 						//a3
+	 while (1) {       	 	Spin(1);        	*p = *p + 1;        	printf("(%d) p: %d\n", getpid(), *p); // a4	}	return 0; 
+}
+
+Output: 
+prompt> ./mem &; ./mem &      [1] 24113      [2] 24114      (24113) memory address of p: 00200000      (24114) memory address of p: 00200000      (24113) p: 1      (24114) p: 1      (24114) p: 2      (24113) p: 2      (24113) p: 3      (24114) p: 3      (24113) p: 4      (24114) p: 4
+
+Both showing same address of p, because each program creates its own virtual address space. OS then maps these VAS to physical memory.
+
+Abstraction: makes it possible to write a large program by dividing it into small and understandable pieces 
+
+Goals of an OS:
+	-efficient (minimize overhead, optimize performance)
+	-protected (programs do not maliciously affect one another, and 	are separate from each other, i.e. isolated)
+	-reliable (if OS crashes, so do all programs!)
+
+History
+Batch processing: Numerous jobs/programs were set up, then run by an operator (a real person). Programs were not interactive, and much of what the modern OS does (scheduling) was managed by this operator.
+
+Adding system calls: instead of having just procedure calls which could be called by any program, system calls were developed. When a system call occurs the control switches to the OS (not the program) and raises a ‘hardware privilege level’. Normally user applications run in ‘user mode’, i.e. the hardware restrictions what those applications can do. When a program makes a system call, i.e. through a trap, the hardware pushes control to a trap-handler (setup by the OS). At that point, the hardware raises the privilege level to ‘kernel mode’. In ‘kernel mode’, the OS has full access to everything (men, i/o devices, etc.). When the OS is done servicing/handling the trap, it passes control back to the application via a ‘return-from-trap’ instruction.
+
+Minicomputer: rather than one large mainframe, created smaller computers that opened up a world of developer opportunity
+
+Multiprogramming: initially the OS would load a bunch of programs and switch rapidly between them. This maximized CPU utilization, as when programs had to wait for things (e.g. i/o devices) they could switch to another program to maintain CPU utilization. Multiprogramming brought about the issues of memory protection (protect programs from each other), concurrency (how to behave correctly even with interrupts)
+
+PCs: personal computers that originally disregarded a lot of what minicomputers taught us, i.e. memory protection, infinite loops, starvation, etc. Eventually, OS’s realized the importance and rebuilt their systems around the minicomputer concepts
+
+
+
+*********Virtualization *****************
+Process: simply put, it is a running program
+
+The illusion of many CPU’s:
+	-Only a few CPU’s available for processes to run, thus comes the need for VIRTUALIZATION. With Virtualization, a process runs on the CPU, then that process stops and another process runs, over and over again. The CPU is ‘time-sharing’ its resources, in order to run multiple processes. Performance may be affected, since processes will run slower if there are a lot of them. 
+
+the OS needs two things 1) mechanisms and 2) policies
+
+Mechanisms: low level methods or protocols that implement a needed piece of functionality (e.g. a context switch, which switches from one process to another, is a time-sharing mechanism)
+	-tells the OS how to perform an action
+
+Policies: the intelligence of the OS; algorithms that that make decisions for the OS (e.g. a scheduling policy determines which program should run next and for how long)
+	-tells the OS which process/program to run
+
+Steps to run a program:
+	1) OS loads programs code and any static data into memory, into 
+	virtual address space of the process
+		-programs originally reside on disks as executables. OS l		loads that executable into memory
+		-historicyally done eagelery(load everything before 			running), modern done lazily (load as you go, requires 		paging/swapping)
+	2)Memory is allocated for programs run-time stack (local v		variables, return addresses, function parameters, etc.)
+		-OS allocates this memory and gives it to the process, 	typically with arguments (argc, and argv in main)
+	3) Memory also allocated into the Heap, i.e. explicitly requested 	memory used for dynamically-allocated data
+		-requires malloc() and cleared with free();
+		-needed for data structures such as linked lists, hash 		tables, trees, etc.
+	4) setup file descriptors
+		-main three are standard input, standard output, and error
+	
+Process States:
+	1) Running: process is actively running (i.e. executing its 		instructions) and thus consuming CPU
+
+	2) Ready: process is ready to run, but OS has not chosen to run it 	yet
+
+	3) Blocked: process has performed some type of instruction that 
+	makes it not ready to run until something else happens
+	
+OS keeps track of a process list for all the processes that are ready, running, or blocked. 
+	-Commonly refereed to as the process list, or PROCESS CONTROL BLOCK data structure
+
+User vs. Kernel mode
+A process must able to do certain things like I/O requests, however, we don’t want to give it complete (direct) control over the CPU (could run forever and never return). The hardware allows us to create two different modes of execution: the user mode and the kernel mode. In the user mode, programs do not have full access to the hardware resources, thus limiting their ability whereas in kernel mode, the OS has complete access to all hardware resources. Special instructions to trap INTO kernel and return-from-trap back into user-mode are provided, as well as instructions that allow the OS to tell the hardware where the trap table, and thus trap handlers reside in memory.
+
+Note: system calls look exactly like procedure calls, (e.g. open()), but within that system call is a hidden trap instruction, which calls a trap handler that is hard coded into the assembly language
+
+On boot the kernel sets up a trap table in memory, which tells the OS what code to run when certain exceptions occur. The OS tells the hardware where these trap handlers are and the hardware stores those locations until the computer is restarted, thus knowing what code to jump to when exceptions/traps are called.
+
+Note: being able to execute the specific instruction that tells the hardware where the trap handler is is an extremely powerful tool (if malicious, you could place your own code and tell the hardware to jump to your own code!), hence it is considered  PRIVILEGED operation.
+
+OS Regaining Control
+
+Cooperatively: OS just waits for a system call or an illegal operation, it trusts processes (never a good idea) and manages things passively
+	-only solution if a process never makes a system call is to reboot
+
+Nocooperatively: use of a timer-interrupt - an interrupt occurs every few milisends, halts the currently running process and runs a predetermined ‘INTERRUPT HANDLER’, which does whatever the OS desires (i.e. continue running halted process, switch to a new process, etc.)
+	-gives control to OS even when processes are noncooperative (i.e. 	don’t ever make system calls) and is thus essential for the OS to 	maintain control
+
+The decision made to either continue running the current process, or run a new one is determined by a ‘SCHEDULER’ which follows certain policies determined by the OS
+	-if decision is to switch, OS executes a low level piece of code r	referred to as a ‘context switch’
+
+Context Switch:
+	-OS saves a few registers for currently running process (onto the 	kernel stack)
+		-including the program counter (i.e. which instruction it 		is at)
+	-Restore a few registers for the soon-to-be-running process (again 	from the kernel stack)
+	-on return from trap, the new process will begin running (again)
+
+
+******************************SCHEDULING********************************
+
+Scheduling policies - tell the scheduler which process to run and for how long
+
+Workload: the processes waiting to be run by the scheduler
+
+General assumptions (job = process)
+1. Each job runs for the same amount of time.2. All jobs arrive at the same time.3. Once started, each job runs to completion.4. All jobs only use the CPU (i.e., they perform no I/O) 5. The run-time of each job is known. -LIKELY IMPOSSIBLE BTW
+
+Turnaround time = T(completion) - T(started)
+	-Note: performance metric
+
+Policies:
+FIFO - whichever process got their earliest, runs next. 	
+	-works fairly well
+	-If three jobs (A,B, C,) arrive at apprx the same time and run in 	order, respectively, with each being 10 seconds
+		A(turnaround) = 10-0 = 10
+		B(turnaround) = 20-0 = 20
+		C(turnarounD) = 30-0 = 30
+		Average turnaround = 20 seconds
+	-What if A is 100 seconds, B is 10, and C is 10
+		A(turnaround) = 100
+		B(turnaround) = 110-0 = 110
+		C(turnarounD) = 120-0 = 120
+		Average turnaround = 110 seconds
+	Issue: Convoy effect
+		-short processes get queued behind heavy, long ones and
+		there turnaround times jump dramatically
+
+Shortest Job First (SJF)
+	-Same jobs, but run shortest ones first
+		
+		B(turnaround) = 10-0 = 10
+		C(turnarounD) = 20-0 = 20
+		A(turnaround) = 120-0 = 120
+		Average turnaround = 50 seconds
+	-Greatly reduces FIFO issue of convoy effect!
+	-THIS IS OPTIMAL SCHEDULING ALGORITHM: short jobs are executed 	quickly and larger jobs are pushed to the back
+	-Okay, what if jobs don’t arrive at same time? A arrives at 0, B 	and C arrive at 10. they have to wait until A finishes! Again 	suffering from the convoy effect
+	-nonpremptive, i.e. is not capable of stopping a process
+
+Shortest Time to Completion First or PSJF
+	-Break assumption 3, can stop a job before completion
+	-Any time a new job enters the system, it evaluates how long they 	take until they are completed, the jobs that have the shortest 	completion time runs, and then checks again, and so on.
+	-So A will run for 10 seconds, then B & C are introduced, both 	with a 10second completion time, so the scheduler preempts A, runs 	B & C, then runs A again
+
+		A(turnaround) = 120-0 = 120
+		B(turnaround) = 20-10 = 10
+		C(turnarounD) = 30-10 = 10
+		Average = 50 seconds again
+	-Provably optional again!
+
+Response Time = T(first run) - T(arrival)
+	-i.e. time program first runs to when it actually arrived
+	-none of the previous policies were good for response time
+
+Round Robin (aka time-slicing)
+	-instead of too completion, RR runs a job for a specific time 	slice, then switches to the next, then the next, then repeats, 	etc.
+
+	-Note: length of time MUST be a multiple of time interrupt period
+	-Length of timeslice is CRITICAL for RR
+		-the shorter it is, the better the response time
+		-but if too short, context switches dominate performance
+			-want to amortize the cost of a context switch, 		i.e. increase time slice enough to wear the cost of a 		context switch is not huge
+			-if CS is 1second, timeslice is 10seconds
+				-cost = 10%
+			if CS is 1 second, timeslice is 100seconds
+				-cost = 1%
+
+	-great if response time is our only metric, however not optimal 	for turnaround time! (actually one of the worst, drags jobs out)
+	-GENERALLY: any policy that is fair (evenly distributes CPU) will 	perform poorly on metrics like turnaround time
+	-TRADEOFF ARISES!
+		-be unfair and run shorter jobs first, but increase 			response time	
+		-be fair and reduce response time, but increase turnaround 		time
+
+
+What about I/O requests?
+I/0 requests often take a large amount of time, thus our scheduler needs to account for jobs that make them. If we don’t, then job A (which issues multiple I/0 requests will take a long time to run, and job B (which doesn’t require I/O) is stuck waiting
+
+Technique? Split job A into sub routines and use a STCF scheduler. Thus, enabling overlap and optimizing use of the CPU in time slots that A has made and is waiting for its I/O requests
+
+Summary:
+Two types of Schedulers, one that optimizes turnaround time and the other that optimizes response time, and both are bad at the other. How can we crate a scheduler that mixes both of these?
+
+MULTILEVEL FEEDBACK QUEUE
+Goal: optimize turnaround time (easy if actually knew the run time of a job, which we don’t) and also make the system feel response to interactive users, i.e. minimize response time
+
+Summary: MLFQ has a number of distinct queues, each having a different priority level. A job that is ready to run is on any queue, and the priority of that queue determine which job runs next.
+	-if multiple jobs in line have the same priority, do round robin!
+	
+MFLQ varies the priority of job based on its observed behavior
+• Rule 1: If Priority(A) > Priority(B), A runs (B doesn’t).• Rule 2: If Priority(A) = Priority(B), A & B run in RR.
+• Rule 3: When a job enters the system, it is placed at the highest priority (the topmost queue). (gives a chance to prove its a short job)• Rule 4a: If a job uses up an entire time slice while running, its pri- ority is reduced (i.e., it moves down one queue). (i.e. it is LARGE JOB)• Rule 4b: If a job gives up the CPU before the time slice is up, it stays at the same priority level. (it was a short job or made in i/o call)
+
+
+Issues;
+	- to many short (interactive jobs) then the longer jobs will 	starve!
+	-a program could game the scheduler, i.e. give up the CPU right 	before the time slice to maintain its priority and thus maintain
+	 the CPU
+
+So we add 
+• Rule 5: After some time period S, move all the jobs in the system to the topmost queue.
+
+	-processes are guaranteed not to starve, they will be boosted and run no matter what else is on the CPU
+	- fixes the first issue
+
+Now for gaming the scheduler we must modify rule 4
+• Rule 4: Once a job uses up its time allotment at a given level (re- gardless of how many times it has given up the CPU), its priority is reduced (i.e., it moves down one queue).
+
+In short, we account for how long the job has run, and once it has run for a full time slice, we demote its priority. Thus, not allowing it to maintain a high priority by giving up the CPU right before the end of the time slice.
+
+parameterizing the MLFQ:
+	-one technique is to increase a time slice as you increase queues
+	- that way, short running jobs are run at higher priority, and 	long running jobs are pushed to higher queues
+
+VooDoo Contsants: a content that is almost impossible to verify as the best possible value. In this example, setting S (i.e.) the boost time slice is a voo doo constant. 
+
+Summary MLFQ:
+• Rule 1: If Priority(A) > Priority(B), A runs (B doesn’t).• Rule 2: If Priority(A) = Priority(B), A & B run in RR.• Rule 3: When a job enters the system, it is placed at the highestpriority (the topmost queue).• Rule 4: Once a job uses up its time allotment at a given level (re-gardless of how many times it has given up the CPU), its priority isreduced (i.e., it moves down one queue).• Rule 5: After some time period S, move all the jobs in the systemto the topmost queue.
+
+-Doesnt require knowledge of job time (which is impossible to get anyway), minimizes response time while also decreasing turnaround time
+
+********************************PAGING********************************
+Base and Bounds - CPU maintains two registers which determine where the Physical Memory of a process starts and its limit. 
+	-typically the OS will set up a free list, i.e. chunks of memory that are not currently being used
+	-issue: if VA is large, large amount of space will be wasted, i.e. internal fragmentation of memory
+
+Segmentation - instead of just one set of base and bound registers, use one for every part of a process (code, stack and heap). Thus, the OS can map each part of a process to physical memory, without wasting the same amount of space as the original base and bounds register.
+	- If a memory address is referenced outside of its bounds a segmentation will occur
+	- bits of VA can determine what segment it is apart of and thus were to find it in PAS, the offset then tells it which byte it wants to use
+	- if a process needs more space, i.e. (malloc() is called), make a system call (brk, sark), check if there is any available space at the end of the Heap or in the free list, if so allocate it
+	-otherise, erase the current heap and find a space that is large enough (EXPENSIVE, could return FAILURE if no determined space is large enough, but collective free space is
+		-FRAGMENTATION!
+	
+
+Paging - everything in the VAS and PAS is cut into fixed sized pieces
+	-Each page has a VPN and an offset, which is translated to a PFN 	and the same offset
+	-Ex. If 64 bit address space and each page is 4KB(i.e. holds 12 	bites of information) then the VPN is 20 bytes (2^32-2^12 = 2 ^ 	20). Thus the VPN is 20 bytes and the offset is 12 bytes.
+
+	#vpn = number of addresses needed to be translated
+
+
+Page table then holds the translations from VPN to PFN (one page table per every process running)
+	-STORES ADDRESS TRANSLATIONS, but can get terribly large
+	-Page Table Entry: what it sounds like, holds the physical translation plus some other useful stuff
+		-Valid bit: tells us if translation is valid
+		-Protectino bit: tells us if allowed to access this memory 		(if not exception/trap is called)
+		-Present bit: tells us if the page is in virtual memory or stored on the disk (i.e. has been swapped out)
+		-dirty bit: tells us if a page has been modified since we brought it into memory
+		-access bit: tells us if page has been recently accessed (helps determine which ones are popular)
+			-useful for PAGE REPLACEMENT 
+		
+	-Size of Page table = number of addresses needed to be stored * the size of a PTE (i.e. what holds the translations and other useful information)
+
+Page Table Base Register: tells the hardware where the page table for this process resides
+	
+Steps:
+	1) Form address of PTE = PTBR + (VPN * sizeof(PTE))
+	2) Fetch PTE from memory
+	3) Check if Valid/present/ protection bits, if 0 raise exceptions
+	4) Create the Physical address from PTE and VPN | offset
+	5) Fetch bytes at the Physical address
+
+Issues: it’s slow! requires two memory accesses, one to get PTE and address translation and then one for the data itself!
+	-can take up a lot of memory to manage page tables and PTE’s
+	
+
+Advantages: 
+	- Does not lead to external fragmentation (like segmentation) because it divides VAS and PAS into fixed sized pages
+	- is fairly flexible 
+
+
+Translation Lookaside Buffer
+-To make paging faster we need to use a Translation Lookaside Buffer (TLB), an additional piece of hardware added to the Memory management Unit (aka address translation cache)
+	- a cache that holds POPULAR page table translations 
+
+	STRUCTURE:
+
+	Valid	|	VPN	|	PFN	| 	OFFSET
+
+
+Hardware first checks TLB if it contains address translation, if not it will reference memory for the PTE and produce the translation (costly and slow) and then add the translation to the TLB, and access memory for the data
+
+TLB misses lead to more memory access, thus we want to reduce them
+
+TLB hit rate = number hits/ total number of accesses
+
+TLB takes advantage of spatial locality - referencing things close together in memory
+
+The larger the pages, the smaller the hit rate (since it will require less translations for VPN)
+
+Temporal locality = referencing recent memory access shortly after they were previously referenced (i.e. their translations remain stored in the TLB before other memory accesses are made)
+
+Who handles TLB Miss?
+Hardware - will use PTBR to find the translation, update the page table itself and then run the instruction again
+Software - hardware raises an exception on a TLB miss, raises the privilege of the OS To kernel mode, executes a trap handler that tells it how to handle a TLB miss, i.e. it will look up the translation, use its privilege to update the TLB and return from trap.
+	-Advantage: FLEXIBLE! easy for hardware to just raise an exception
+	-note, return from trap should return to the instruction that called the trap (unlike system calls/procedure calls which returns to the instruction after), in order to re run the instruction and get the data from TLB.
+	-must be careful about always creating TLB misses
+	-can hardwire certain translations to TLB (can’t be replaced)
+
+
+Context Switches:
+TLB holds translations for the CURRENT running process, thus useless for anything else. On context switch options are:
+
+	1) Flush TLB
+		-empty it on context switch (EXPENSIVE)
+		-hardware can do so if PTBR changes
+	2) Use process identifier in TLB 
+		-hardware needs to know which process identifier is running
+		-allows multiple process address translations to be stored in the TLB
+	
+
+TLB Replacement Policies
+Least Recently Used (LRU) - evict the page that has been used least recently (good for locality)
+Randomly - randomly evict a page (sometimes better than LRU, especially if always accessing the n + 1 page)
+
+
+Okay, what about the size of Page tables
+Linear page tables take up tons of memory, need a way to make them smaller!
+
+One way: make the pages bigger (i.e. a smaller page table is necessary)
+	Ex. previously had 32 bit VAS with 20bit VPN and 4kB page size
+		-Total space required per page table = 4MB
+			(1MB address * 4bytes per address)
+	make page size 16kb, thus VPN is 18bits
+		-Total space required = 2^18 * 2^2 = 2^20 = 1mb per page 		table
+
+	-issues: creates waste within a page, i.e. internal fragmentation
+
+Combining segmentation and paging:
+Instead of applying the whole address space to VAS, segment it like before. Each segment has a base and bounds register, which points to its address in physical memory and its max address.
+
+-not always idea because segmentation typically leads to external framgeentaiton. because our three sections can be of different size, page tables can be of arbitrary size (multiples of pet’s), and finding free space to hold it becomes more complicated
+
+Multilevel paging - BEST WAY
+Chop up page table into paged size units
+If all PTE’s on table are invalid, don’t allocate it at all
+To track if table is valid, add a valid bit to the PAGE
+Page directory reads that valid bit and either tells you where that page is in the page table, or that it is an invalid page (that is, none of its entries are valid or usable)
+	-essentially, frees up parts of memory by removing pages that are useless (i.e. invalid)
+	-contains one entry per page of a page table for a two level table
+		| Valid | PFN |
+
+	-called a level of INDIRECTION
+	-on TLB miss:
+		2 loads to memory to get Page Directory Entry and load 		into Page Directory and Page Table Entry translation into 		TLB
+
+
+Size of pages / size of PTE = #of PTE’s per page
+size of Address Space / size of page = #of pages 
+Size of offset (in bits) + size of page = size of Address space
+
+Goal: make pages in page directory exact size of our page table pages
+If not the same size, then an additional level of indirection is required
+
+
+
+Previous assumptions said that our VAS was always smaller than our Physical Memory
+
+Machines cannot hold all the pages for multiple processes all at once, need to be swapped in and out!
+
+We like big address spaces, makes it easy to do what we want without having to worry about anything - hence the illusion
+
+Swap space - space reserved on a disk to store pages that cannot be held in memory
+
+
+	Os writes to swap space in page sized units
+	-needs to remember the DISK address of those pages
+
+Using a hardware managed TLB, a vpn is found in the TLB than we have a hit, otherwise the hardware must find the VPN in the page table, extract its PFN and rerun. But, if that page is not found in the page table than we experience a page fault, meaning that page is not in physical memory, i.e. it has been swapped to disk (page fault handlers are alway managed by the OS)
+	-when page fault handler occurs, the process is in the block state, i.e. waiting to read from disk (I/O)
+
+Page Replacement Policy for swap space
+Average Memory Access Time = Prob(hit) * Time(hit) + Prob(miss) * Time(miss)
+
+Optimal: remove the page that is the furthest away from being used again
+	-hard to implement since we don’t know what page will be used in the future
+
+Fifo
+pages that were put into physical memory first are replaced first
+
+Random
+randomly remove pages, better than fifo in certain situations
+
+LRU - least recently used policy
+keep track of when a page was last used and when a page fault happens, kick out the page that has been least recently used
+	-why is it good? 
+	because most code sequences access data in a loop, or within address spaces close to each other, 
+
+
+
+No locality workload
+if there is no locality in a program, no replacement policy is better than the other, hit rate is determined solely by the size of the cache
+
+80-20 workload
+80% of the references are made to 20% of the pages, i.e. locality
+LRU does noticeably better
+
+
+To mimic LRU add use bit and arrange pages in a circular bit
+	-clock goes around and checks use bit, if 1 sets to 0 and goes to next until (if it needs to loop it can) it finds a page that has a use bit of 0
+	-perfromacne similar to LRU, but not perfect
+
+*********************************SEMPHORES*******************************
+
+
+
+
+
+
+
+
+
+
+
+
+

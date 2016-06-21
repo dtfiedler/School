@@ -1,0 +1,40 @@
+how does xv6 set up page table?
+- vm.c
+-----------------
+kpgdir: page table for kernel address space for scheduler processes
+
+setupkvm() and exec()
+0..640K(USERTOP) : user memory   (text, data, stack, heap)
+640K..1M          : mapped direct (for IO space)
+1M..end           : mapped direct (for kernel's text and data)
+end..PHYSTOP      : mapped direct (kernel heap and user pages)
+0xfe0000000..0    : mapped direct (devices such as ioapic) 
+
+
+
+
+how exec works to get address spaces filled with code and in general intialized?
+- exec.c
+
+how fork works so that child process copies address space of parent, what needs to change?
+- proc.c, actually work done in vm.c copyuvm
+
+checks and assumptions made about the address space, what happens when passing a parameter
+into the kernel
+- sysfile.c, sys_exec
+
+change makefile because first page is now invalid, so entry point will be next page,
+- user/makefile.mk 
+- kernel/makefile.mk (?)
+- tools/makefile.mk (?)
+
+how xv6 catches illegal memory access? we should trap and kill the process when user code
+tries to access a null pointer
+- T_PGFLT ../include/traps.h, trap.c
+
+
+
+References:
+defs.h
+mmu.h
+HISTORY

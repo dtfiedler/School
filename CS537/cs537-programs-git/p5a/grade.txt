@@ -1,0 +1,10 @@
+Score = 18 (on 18)
+Extra Credit Score = 0 (on 5)
+Submission late by 4 day(s)
+------------------------------------
+Projection report for late days:-
+------------------------------------
+If 1 late days consumed => Score = 7.2
+If 2 late days consumed => Score = 10.8
+If 3 late days consumed => Score = 14.4
+If 4 late days consumed => Score = 18.0

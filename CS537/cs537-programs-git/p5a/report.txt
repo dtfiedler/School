@@ -1,0 +1,298 @@
+
+**********************************************************************
+
+Test build
+build project using make
+
+**********************************************************************
+make clean
+rm -rf mfs.o udp.o libudp.so libmfs.so server test
+make
+gcc -c -Wall -Werror -fpic mfs.c -O
+gcc -shared -Wall -o libmfs.so mfs.o -O
+gcc -Wall -Werror -o server server.c -O
+
+
+test build PASSED
+ (build project using make)
+
+
+**********************************************************************
+
+Test shutdown
+init server and client then call shutdown
+
+**********************************************************************
+
+
+test shutdown PASSED
+ (init server and client then call shutdown)
+
+
+**********************************************************************
+
+Test creat
+creat a file and check with lookup
+
+**********************************************************************
+
+
+test creat PASSED
+ (creat a file and check with lookup)
+
+
+**********************************************************************
+
+Test write
+write then read one block
+
+**********************************************************************
+
+
+test write PASSED
+ (write then read one block)
+
+
+**********************************************************************
+
+Test stat
+stat a regular file
+
+**********************************************************************
+
+
+test stat PASSED
+ (stat a regular file)
+
+
+**********************************************************************
+
+Test overwrite
+overwrite a block
+
+**********************************************************************
+
+
+test overwrite PASSED
+ (overwrite a block)
+
+
+**********************************************************************
+
+Test maxfile
+write largest possible file
+
+**********************************************************************
+
+
+test maxfile PASSED
+ (write largest possible file)
+
+
+**********************************************************************
+
+Test maxfile2
+write more blocks than possible
+
+**********************************************************************
+
+
+test maxfile2 PASSED
+ (write more blocks than possible)
+
+
+**********************************************************************
+
+Test sparse
+write first and last block
+
+**********************************************************************
+
+
+test sparse PASSED
+ (write first and last block)
+
+
+**********************************************************************
+
+Test stat2
+stat a sparse file
+
+**********************************************************************
+
+
+test stat2 PASSED
+ (stat a sparse file)
+
+
+**********************************************************************
+
+Test dir1
+check root for dot entries
+
+**********************************************************************
+
+
+test dir1 PASSED
+ (check root for dot entries)
+
+
+**********************************************************************
+
+Test dir2
+create a new directory and check it
+
+**********************************************************************
+
+
+test dir2 PASSED
+ (create a new directory and check it)
+
+
+**********************************************************************
+
+Test baddir
+try to create a file with a file parent inode
+
+**********************************************************************
+
+
+test baddir PASSED
+ (try to create a file with a file parent inode)
+
+
+**********************************************************************
+
+Test baddir2
+try to lookup a file with a file parent inode
+
+**********************************************************************
+
+
+test baddir2 PASSED
+ (try to lookup a file with a file parent inode)
+
+
+**********************************************************************
+
+Test unlink
+unlink a file
+
+**********************************************************************
+
+
+test unlink PASSED
+ (unlink a file)
+
+
+**********************************************************************
+
+Test unlink2
+unlink a directory
+
+**********************************************************************
+
+
+test unlink2 PASSED
+ (unlink a directory)
+
+
+**********************************************************************
+
+Test empty
+unlink a non-empty directory
+
+**********************************************************************
+
+
+test empty PASSED
+ (unlink a non-empty directory)
+
+
+**********************************************************************
+
+Test name
+name too long
+
+**********************************************************************
+
+
+test name PASSED
+ (name too long)
+
+
+**********************************************************************
+
+Test extracred
+write then read one block from block 15
+
+**********************************************************************
+test extracred FAILED
+
+
+test extracred FAILED
+ (write then read one block from block 15)
+ MFS_Write returned failure inum=1 block=15
+
+**********************************************************************
+Summary:
+test build PASSED
+ (build project using make)
+
+test shutdown PASSED
+ (init server and client then call shutdown)
+
+test creat PASSED
+ (creat a file and check with lookup)
+
+test write PASSED
+ (write then read one block)
+
+test stat PASSED
+ (stat a regular file)
+
+test overwrite PASSED
+ (overwrite a block)
+
+test maxfile PASSED
+ (write largest possible file)
+
+test maxfile2 PASSED
+ (write more blocks than possible)
+
+test sparse PASSED
+ (write first and last block)
+
+test stat2 PASSED
+ (stat a sparse file)
+
+test dir1 PASSED
+ (check root for dot entries)
+
+test dir2 PASSED
+ (create a new directory and check it)
+
+test baddir PASSED
+ (try to create a file with a file parent inode)
+
+test baddir2 PASSED
+ (try to lookup a file with a file parent inode)
+
+test unlink PASSED
+ (unlink a file)
+
+test unlink2 PASSED
+ (unlink a directory)
+
+test empty PASSED
+ (unlink a non-empty directory)
+
+test name PASSED
+ (name too long)
+
+test extracred FAILED
+ (write then read one block from block 15)
+ MFS_Write returned failure inum=1 block=15
+
+Passed 18 of 19 tests.
+Overall 18 of 19

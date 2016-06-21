@@ -1,0 +1,7 @@
+Score = 13 (on 13)
+Extra Credit Score = 6 (on 6)
+Submission late by 1 day(s)
+------------------------------------
+Projection report for late days:-
+------------------------------------
+If 1 late days consumed => Score = 13.0

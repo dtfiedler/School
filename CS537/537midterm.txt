@@ -1,0 +1,28 @@
+CPU: mechanisms: limited direct execution
+	Schedultin:
+	-Basics:	
+		-turnaround + response time
+		-shortest job first
+		-round robing
+		-mlfq
+
+Memory
+	base/bounds
+	segmentation
+	Paging: simple
+	TLBS
+	Multilevel paging
+	Swapping: mechanisms
+	Policies: LRU, random
+
+Concurrency
+	Threads
+	Locks
+	Spin Locks
+	Locks with OS support
+	Condition variables
+	fork/join
+	producer/consumer
+	semaphores
+	classics + rowlock
+	deadlock

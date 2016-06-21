@@ -1,0 +1,61 @@
+CS 537
+
+1/22
+
+Virtualization: CPU illusion that you have several available CPU’s, even though you may only have a few
+
+How?
+Basic idea: Time Sharing
+
+
+    |     |     | 
+  A |  B  |  C  |
+    |     |     |
+——————————————-————>
+	Time
+
+Time sharing allows processes to switch among themselves (fairness, priority, etc.)
+Fairness used to be a huge deal, but the fact that computers became cheaper and it wasn’t a huge priority. But now the new implementation of the Cloud, requires a single shared resource, thus fairness is becoming more important again.
+
+Must provide a private CPU per running program (the illusion we want to provide)
+ 
+Other issues: Protection (from others actions)? Efficient?
+
+Process: a running program has:
+	-instructions
+	-static data
+	-library info, etc.
+	
+So you load process from disk into memory, run the process (execute instructions at first one (i.e. the main function in c)). Program constantly is changing registers, and interacting with memory. You have general purpose registers (i.e. calculations, p etc.) and others (stack pointers, program counters, etc.). There is also the illusion that each program has their own private memory (heap, code, data, stack) 
+
+Virtualizing CPU’s
+
+Mechanism: How to switch between processes?
+
+Policies: Which process should run right now?
+
+Process A roads from disk (privileged) thus it ends OS involvement. 
+
+CPU mode: differentiate
+	-typical program running: user mode( restricted)
+	-OS running: kernel mode (not restricted)
+	
+Tricky: transition from user to kernel and back
+	->special instructions:
+		1) trap (aka a system call): user -> kernel
+		2) return-from-trap: kernel - > user
+	-example system calls : open, read, etc.
+	
+Trap takes us to the OS (kernel mode)
+	-save registers of user program
+	-change the priority level
+	-jump to code in OS to do the work (trap handler)
+
+Trap Table
+-for each numbered trap, which code in the OS should run (code that is run is called trap handler)
+
+Setup for all of this occurs at boot time! 
+-You boot in kernel mode, which then sets up all of the trap tables (that contain trap handlers). 
+	-instruciton tells the CPU where the trap tables are
+	-trap tables are a bunch of functions that handle traps and interrupts (i.e. 	knows what code to run)
+	-it is restricted so no one else controls where the traps go, only executable 	in kernel mode!

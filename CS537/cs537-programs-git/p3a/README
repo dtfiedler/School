@@ -1,0 +1,13 @@
+Name:Yudong Sun 
+CSL-ID:yudong
+Name:Xuyi Ruan
+CSL-ID:xuyi
+(Leave the second name and ID blank if working alone)
+
+
+contest_t:
+- make the data structre double-linked list
+- use next-fit algro
+
+contest_n:
+- double-linked list with next-fit algro

@@ -1,0 +1,34 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main (int argc, char *Argv[]){
+	
+
+	//process creation API
+
+	printf("hello\n");
+
+	//create another process (fork is a system call (a unix api to create a new process))
+	//fork createas a new process, and also duplicates the current process
+	int rc = fork();
+	//new process created, new virtual address space!
+	//prints goodbye twice! process is copy of parent
+	//difference: return code
+	if( rc == 0){
+		//child
+		printf("child: %d\n", (int) getpid());
+	} else if (rc > 0){
+		//parent
+		int cpid = (int) wait(NULL);
+		printf("parent: cpid was %d\n", cpid);
+	} else {
+	        fprintf(stderr, "fail\n");
+	}
+	//want parent to wait for child to complete its execution using wait()
+	//on successs wait returns the pid of terminated child
+	printf("goodbye\n");
+
+	return 0;
+}
